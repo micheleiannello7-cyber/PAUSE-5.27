@@ -1,0 +1,37 @@
+{
+  "summary": "Verifica preview Expo mobile e API pubbliche completata: onboarding profilo/categorie, ingresso Home e apertura lettore funzionano su 390x844; endpoint core rispondono senza 5xx.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/tts/voices", "issue": "Restituisce 503 perché TTS_ENABLED=false nella configurazione preview; audio lettore non verificabile/operativo in questa build."},
+      {"endpoint": "/api/categories", "issue": "La suite legacy attende 13 categorie, ma l'API attuale restituisce 12 come documentato nel PRD."},
+      {"endpoint": "/api/content/report", "issue": "La suite legacy attende 222 storie, mentre il seed attuale espone 441 contenuti."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Lettore audio", "issue": "Non testabile end-to-end perché il backend risponde 503 ai servizi TTS in preview.", "affected_testIDs": ["deep-dive-scroll"]}
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_1.json", "/app/test_reports/pytest/current.xml"],
+  "action_items": [
+    "Decidere se aggiornare i test legacy ai dati correnti (12 categorie/441 contenuti) oppure ripristinare i conteggi attesi.",
+    "Se l'audio è richiesto nella preview, abilitare/configurare TTS; altrimenti mantenere esplicitamente il limite documentato.",
+    "Per test automatici post-onboarding, usare lo stesso contesto pagina: il reset alla root riapre intenzionalmente l'onboarding (ALWAYS_SHOW_ONBOARDING=true)."
+  ],
+  "critical_code_review_comments": [
+    "frontend/src/api.ts legge EXPO_PUBLIC_BACKEND_URL; verificare che questo nome resti coerente con la documentazione che cita EXPO_BACKEND_URL.",
+    "Il log backend mostra tentativi di upload cover falliti con EMERGENT_LLM_KEY missing; i fallback Unsplash permettono comunque il caricamento, ma le cover generate non sono garantite.",
+    "Expo logga warning non bloccanti per textShadow props, pointerEvents props e easing Reanimated non supportata sul web."
+  ],
+  "updated_files": ["/app/test_reports/iteration_1.json"],
+  "success_rate": {"backend": "84% (22/27 test selezionati passati; core live smoke 10/10)", "frontend": "75% (onboarding, Home, lettore pass; tab separati non completati perché il reset root riapre onboarding)"},
+  "seed_data_creation": "Created one TEST review user state with interests, profile and content mode via public API.",
+  "retest_needed": true,
+  "should_call_test_agent_after_fix": true,
+  "context_for_next_testing_agent": "Preview URL: https://ciao-social-208.preview.emergentagent.com. Tested at 390x844. No auth credentials exist in test_credentials.md; auth flow not tested.",
+  "rca_of_issue": "The five pytest failures are expectation/configuration mismatches, not core API 5xx: current seed has 12 categories and 441 contents, while older tests assert 13/222; TTS is deliberately disabled and returns 503 by design. Backend startup also logs cover upload failures because EMERGENT_LLM_KEY is unavailable, but story fallback images keep core UI functional."
+}

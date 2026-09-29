@@ -1,0 +1,36 @@
+{
+  "summary": "Iterazione 2 completata: flusso AUTENTICATO verificato end-to-end (Bearer testtoken + /api/auth/me 200, onboarding con nome precompilato 'Pause Tester', 4 tab Home/Topics/Saved/Profile, lettore con 6 capitoli fino alla schermata finale, bookmark salvato dal lettore e visibile nella tab Saved, persistito server-side sotto user_testpause001). Backend pytest 14/14 PASS; nessun 5xx su 20 endpoint pubblici; seed confermato 12 categorie / 441 storie.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/stories", "issue": "Restituisce 409 storie visibili su 441 seedate: 32 nascoste dal filtro early-access (finestra 7 giorni) per utenti free/anonimi. Comportamento by design, documentato qui per chiarezza."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Ripristino sessione al cold boot", "issue": "Con token iniettato prima del primissimo caricamento della preview (cold load con challenge Cloudflare attiva), la chiamata /api/auth/me al boot e' fallita e auth.tsx ha eseguito clearAuth() CANCELLANDO il token (localStorage 'pause.session_token' rimosso) -> utente degradato a guest. Al reload successivo (contesto caldo) lo stesso token funziona (200, profilo 'Pause Tester'). Rischio reale: un 401 transitorio al boot fa perdere la sessione salvata. Non riprodotto al di fuori del cold load.", "affected_testIDs": ["profile-account-name", "account-sign-in"]}
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json", "/app/test_reports/pytest/pytest_iter2.xml", "/app/backend/tests/test_iter2_authenticated_flow.py"],
+  "action_items": [
+    "Valutare hardening auth.tsx: su 401 di /api/auth/me al boot, ritentare una volta prima di clearAuth() (evita logout permanente su 401 transitori di rete/proxy).",
+    "Nota per i prossimi test UI autenticati: iniettare il token SOLO dopo un primo caricamento warm-up della preview e poi fare page.reload(); add_init_script al cold load fa scattare il clearAuth sopra descritto.",
+    "Mantenere i legacy test aggiornati alle attese correnti (12 categorie / 441 storie): gia' documentato in iterazione 1."
+  ],
+  "critical_code_review_comments": [
+    "auth.tsx: clearAuth() su qualsiasi 401 di authMe cancella definitivamente il token locale; un 401 non dovuto a sessione realmente scaduta disconnette l'utente.",
+    "Nessun pacchetto Expo deprecato rilevato (usa expo-audio ~57 ed expo-video ~57, non expo-av); SafeAreaView di react-native non usato (usa react-native-safe-area-context).",
+    "i18n: default 'it' ma segue la lingua del dispositivo/browser (getLocales) - la preview in browser en-US mostra l'UI in inglese; comportamento coerente con il codice, non un bug.",
+    "UI lingua: il problem statement indica italiano; la preview renderizza in inglese solo perche' il browser di test e' en-US. Verificato che i dizionari IT esistono."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter2_authenticated_flow.py", "/app/test_reports/iteration_2.json"],
+  "success_rate": {"backend": "100% (14/14 pytest iter2, incluso sweep no-5xx su 20 endpoint)", "frontend": "100% flussi richiesti (auth boot, onboarding, 4 tab, lettore 6 capitoli, bookmark->Saved)"},
+  "seed_data_creation": "Bookmark di test su user_testpause001 creato via UI e RIMOSSO dopo verifica (bookmarked_story_ids ripristinato a []). Nessun altro dato seed creato.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Preview: https://ciao-social-208.preview.emergentagent.com (390x844). Auth UI: warm-up load -> localStorage 'pause.session_token' -> page.reload(). Flusso completo PASS: auth/me Bearer, onboarding (START_STEP=1 profilo -> topics chip-*), tab testID tab-home/tab-explore/tab-saved/tab-profile, lettore [data-testid^='home-story-'][data-testid$='-open'] -> deep-dive-scroll -> bookmark-button, Saved tab bookmark-{story_id}. Attese corrette: 12 categorie, 441 storie in DB (409 visibili free). TTS 503 by design. ALWAYS_SHOW_ONBOARDING=true: ogni cold load riparte dall'onboarding.",
+  "rca_of_issue": "Cold-boot auth loss: al primissimo caricamento della preview il boot dell'app chiama /api/auth/me mentre la challenge Cloudflare e' ancora attiva; la risposta non-200/401 fa scattare ApiError 401 -> clearAuth() -> rimozione definitiva del token (comportamento osservato: localStorage vuoto, UI guest). Mitigazione test: warm-up + reload. Mitigazione codice suggerita: retry su authMe prima di cancellare la sessione."
+}

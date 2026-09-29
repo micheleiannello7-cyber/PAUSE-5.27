@@ -6,6 +6,20 @@
 > di contenuti/asset, niente AI a runtime, identità visiva dark-navy/cyan/glass).
 > Lingua dell'utente: **italiano**.
 
+## Ripristino ambiente da GitHub PAUSE-5.26 (29 settembre 2026 — sessione corrente)
+- Richiesta utente: «https://github.com/micheleiannello7-cyber/PAUSE-5.26.git questa è la mia app, Estrapolala e dammi la preview pronta completa grazie».
+- Repo importato preservando i file di piattaforma. Dipendenze backend/frontend installate.
+- **Backend**: seed all'avvio **12 categorie, 441 storie**. `/api/health` = ok.
+  Warning non bloccanti: alcune cover orfane ("nessuna storia con questo id") con fallback Unsplash.
+- **Test credentials**: creato utente test `user_testpause001` (pause.test@example.com) con
+  session token Bearer in `/app/memory/test_credentials.md` (l'app usa SOLO login social
+  Google/Apple — niente email/password).
+- **Fix auth**: retry su `authMe()` al cold boot in `frontend/src/auth.tsx` — un 401
+  transitorio della challenge edge non cancella più il token di sessione.
+- **Test (iteration 2)**: 14/14 backend PASS, frontend PASS — flusso autenticato,
+  4 tab (Home/Explore/Saved/Profile), lettore 6 capitoli, bookmark persistente.
+  TTS disabilitato by design in preview (`TTS_ENABLED="false"`).
+
 ## Summary
 App mobile Expo (React Native + FastAPI + MongoDB) che trasforma i momenti morti in
 curiosità / mini-lezioni, con una "pausa" intenzionale tra le sessioni. Contenuti

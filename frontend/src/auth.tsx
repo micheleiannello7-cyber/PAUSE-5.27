@@ -133,16 +133,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await readToken();
       if (!token) { setStatus("guest"); return; }
       setApiAuthToken(token);
-      try {
-        const me = await api.authMe();
-        if (!alive) return;
-        await adoptUserId(me.user_id);
-        setUser(me);
-        setStatus("authenticated");
-      } catch (e) {
-        if (!alive) return;
-        if (e instanceof ApiError && e.status === 401) await clearAuth();
-        else setStatus("guest"); // offline: si continua come ospite senza perdere il token
+      // Al cold boot la preview può rispondere 401 per la challenge edge prima
+      // che il backend sia raggiungibile: un retry evita di buttare la sessione.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const me = await api.authMe();
+          if (!alive) return;
+          await adoptUserId(me.user_id);
+          setUser(me);
+          setStatus("authenticated");
+          return;
+        } catch (e) {
+          if (!alive) return;
+          const unauthorized = e instanceof ApiError && e.status === 401;
+          if (unauthorized && attempt === 0) {
+            await new Promise((r) => setTimeout(r, 1500));
+            if (!alive) return;
+            continue;
+          }
+          if (unauthorized) await clearAuth();
+          else setStatus("guest"); // offline: si continua come ospite senza perdere il token
+          return;
+        }
       }
     })();
     return () => { alive = false; sub?.remove(); };
