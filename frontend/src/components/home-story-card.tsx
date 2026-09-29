@@ -32,21 +32,22 @@ export function HomeStoryCard({ story, active, instance, onOpen, onListen }: {
   return (
     <View style={styles.card} testID={active ? `story-card-${story.id}` : `deck-card-${story.id}-${instance}`}>
       <StoryHero story={story} style={StyleSheet.absoluteFill} iconSize={64} transition={0} />
-      {/* Top scrim keeps the badges legible on bright covers. */}
-      <LinearGradient colors={[withAlpha(colors.artworkSurface, 0.62), withAlpha(colors.artworkSurface, 0)]} locations={[0, 1]}
-        style={[styles.topScrim, styles.noTouch]} />
-      {/* Bottom scrim: the title always sits on a near-opaque dark band, whatever the artwork. */}
+      {/* Bottom scrim: title and badges always sit on a near-opaque dark band, whatever the artwork. */}
       <LinearGradient colors={[withAlpha(colors.artworkSurface, 0), withAlpha(colors.artworkSurface, 0.1), withAlpha(colors.artworkSurface, 0.86), withAlpha(colors.artworkSurface, 0.97)]}
         locations={[0, 0.42, 0.74, 1]} style={[StyleSheet.absoluteFill, styles.noTouch]} />
       <Pressable testID={`${id}-open`} style={StyleSheet.absoluteFill} onPress={onOpen} onLongPress={showPreview} onPressOut={hidePreview} delayLongPress={350}
         accessibilityRole="button" accessibilityLabel={`${label}: ${story.title}`} accessibilityHint={story.hook} />
-      <StoryMetaChips story={story} minutes={story.reading_time_min} idPrefix={id} style={styles.topRow} />
+      {/* Same order as the reader opening (title, then the three data): the
+          morph towards the reader barely has to move them. */}
       <Animated.View style={[styles.body, bodyStyle]} pointerEvents="box-none">
-        <HighlightedTitle testID={`${id}-title`} title={story.title} highlight={story.highlight_words} style={[styles.title, { fontSize, lineHeight: fontSize * 1.14 }]}
-          numberOfLines={4} adjustsFontSizeToFit minimumFontScale={0.8} />
-        {onListen && <Pressable testID={active ? "home-listen-story" : `${id}-listen`} accessibilityRole="button" accessibilityLabel={t.audio_listen_short} onPress={onListen} style={styles.listen}>
-          <Ionicons name="headset-outline" size={19} color={colors.cyan} />
-        </Pressable>}
+        <View style={styles.titleRow} pointerEvents="box-none">
+          <HighlightedTitle testID={`${id}-title`} title={story.title} highlight={story.highlight_words} style={[styles.title, { fontSize, lineHeight: fontSize * 1.14 }]}
+            numberOfLines={4} adjustsFontSizeToFit minimumFontScale={0.8} />
+          {onListen && <Pressable testID={active ? "home-listen-story" : `${id}-listen`} accessibilityRole="button" accessibilityLabel={t.audio_listen_short} onPress={onListen} style={styles.listen}>
+            <Ionicons name="headset-outline" size={19} color={colors.cyan} />
+          </Pressable>}
+        </View>
+        <StoryMetaChips story={story} minutes={story.reading_time_min} idPrefix={id} style={styles.chipsRow} />
       </Animated.View>
       <Animated.View testID={`${id}-preview`} style={[styles.panel, styles.noTouch, panelStyle]} pointerEvents="none"
         onLayout={({ nativeEvent }) => { const h = Math.ceil(nativeEvent.layout.height); if (h && h !== panelHeight) setPanelHeight(h); }}>
@@ -65,9 +66,9 @@ export function HomeStoryCard({ story, active, instance, onOpen, onListen }: {
 const useStyles = makeStyles((colors) => ({
   card: { flex: 1, borderRadius: 19, overflow: "hidden", justifyContent: "flex-end", backgroundColor: colors.artworkSurface, borderWidth: 1, borderColor: withAlpha(colors.cyanSoft, 0.42) },
   noTouch: { pointerEvents: "none" },
-  topScrim: { position: "absolute", top: 0, left: 0, right: 0, height: "30%" },
-  topRow: { position: "absolute", top: 14, left: 14, right: 14, pointerEvents: "none" },
-  body: { padding: 16, paddingBottom: 16, flexDirection: "row", alignItems: "flex-end", gap: 10, pointerEvents: "box-none" },
+  body: { padding: 16, paddingBottom: 16, gap: 10, pointerEvents: "box-none" },
+  titleRow: { flexDirection: "row", alignItems: "flex-end", gap: 10, pointerEvents: "box-none" },
+  chipsRow: { pointerEvents: "none" },
   title: {
     flex: 1, color: colors.onGradient, fontFamily: typography.displayBold, letterSpacing: -0.6, pointerEvents: "none",
     textShadowColor: withAlpha(colors.artworkSurface, 0.85), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6,

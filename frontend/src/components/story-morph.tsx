@@ -1,7 +1,8 @@
 // PAUSE — transizione card Home → lettura. La copertina non cambia schermata:
 // resta ferma e si allarga fino alla cornice della presentazione del lettore;
-// la pillola dei badge scende e diventa la griglia info; il titolo esce dalla
-// card e si posa sotto la copertina; introduzione e tasti compaiono al loro
+// titolo e pillola dei badge, già in fondo alla card nello stesso ordine della
+// presentazione (titolo sopra, dati sotto), scivolano di poco fin sotto la
+// copertina e la pillola diventa la griglia info; introduzione e tasti compaiono al loro
 // posto. Finita l'animazione (livello fermo, già identico alla presentazione)
 // si apre il lettore sotto senza animazione nativa e, appena è disegnato,
 // questo livello si dissolve sopra di lui: nessun lavoro pesante mentre
@@ -57,9 +58,10 @@ const SLIDE_BACK_MS = 220;
 // layout definitivo (es. la card "riprendi" che compare e restringe il mazzo);
 // poi si misura la card reale e vi si rientra. Se la Home tace, si parte comunque.
 const HOME_SETTLE_MAX_MS = 240;
-// Geometria della card Home (home-story-card): bordo, padding di badge e titolo,
-// larghezza del tasto cuffie (44 + gap 10), raggio della card e della copertina.
-const CARD_BORDER = 1, CARD_PAD = 16, CHIP_INSET = 14, CHIP_H = 28, LISTEN_W = 54, CARD_RADIUS = 19;
+// Geometria della card Home (home-story-card): bordo, padding del corpo (titolo
+// sopra, pillola dei badge sotto, separati da CHIP_GAP), larghezza del tasto
+// cuffie (44 + gap 10), raggio della card e della copertina.
+const CARD_BORDER = 1, CARD_PAD = 16, CHIP_H = 28, CHIP_GAP = 10, LISTEN_W = 54, CARD_RADIUS = 19;
 const sameRect = (a: MorphRect, b: MorphRect) =>
   Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.width - b.width) < 0.5 && Math.abs(a.height - b.height) < 0.5;
 const CLAMP = Extrapolation.CLAMP;
@@ -128,8 +130,10 @@ export function StoryMorph({ story, from: fromProp, premium, ready, onCommit, di
   const [cardTitleH, setCardTitleH] = useState(0);
   const inset = CARD_BORDER + CARD_PAD;
   const titleW = from.width - inset * 2 - (premium ? LISTEN_W : 0);
-  const titleFrom = { x: from.x + inset, y: from.y + from.height - inset - cardTitleH };
-  const chipsFrom: MorphRect = { x: from.x + CARD_BORDER + CHIP_INSET, y: from.y + CARD_BORDER + CHIP_INSET, width: from.width - (CARD_BORDER + CHIP_INSET) * 2, height: CHIP_H };
+  // In fondo alla card: pillola dei badge sull'ultimo rigo, titolo appena sopra.
+  const chipsFrom: MorphRect = { x: from.x + inset, y: from.y + from.height - inset - CHIP_H, width: from.width - inset * 2, height: CHIP_H };
+  const titleRowBottom = chipsFrom.y - CHIP_GAP;
+  const titleFrom = { x: from.x + inset, y: titleRowBottom - cardTitleH };
   const cardFont = Math.min(31, Math.max(20, winW * (story.title.length > 65 ? 0.056 : 0.062)));
   // Gli elementi in movimento stanno fermi nella posizione finale e si spostano
   // solo con una traslazione: finché la meta non è misurata, la meta è la partenza.
@@ -323,14 +327,13 @@ export function StoryMorph({ story, from: fromProp, premium, ready, onCommit, di
           <Animated.View style={[StyleSheet.absoluteFill, readerSkin]}><CoverNightSkin /></Animated.View>
         </Animated.View>
         <Animated.View style={[StyleSheet.absoluteFill, homeSkin]}>
-          <LinearGradient colors={[withAlpha(colors.artworkSurface, 0.62), withAlpha(colors.artworkSurface, 0)]} locations={[0, 1]} style={styles.topScrim} />
           <LinearGradient colors={[withAlpha(colors.artworkSurface, 0), withAlpha(colors.artworkSurface, 0.1), withAlpha(colors.artworkSurface, 0.86), withAlpha(colors.artworkSurface, 0.97)]}
             locations={[0, 0.42, 0.74, 1]} style={StyleSheet.absoluteFill} />
         </Animated.View>
         <Animated.View style={[StyleSheet.absoluteFill, styles.homeEdge, homeSkin]} />
       </Animated.View>
       {premium ? (
-        <Animated.View style={[styles.listen, { left: from.x + from.width - inset - 44, top: from.y + from.height - inset - 44 }, homeSkin]} pointerEvents="none">
+        <Animated.View style={[styles.listen, { left: from.x + from.width - inset - 44, top: titleRowBottom - 44 }, homeSkin]} pointerEvents="none">
           <Ionicons name="headset-outline" size={19} color={colors.cyan} />
         </Animated.View>
       ) : null}
@@ -371,7 +374,6 @@ const useStyles = makeStyles((colors) => ({
   hidden: { opacity: 0 },
   centered: { alignItems: "center", justifyContent: "center" },
   cover: { position: "absolute", overflow: "hidden", backgroundColor: colors.surfaceSecondary },
-  topScrim: { position: "absolute", top: 0, left: 0, right: 0, height: "30%" },
   homeEdge: { borderWidth: 1, borderColor: withAlpha(colors.cyanSoft, 0.42) },
   listen: {
     position: "absolute", width: 44, height: 44, borderRadius: 24,

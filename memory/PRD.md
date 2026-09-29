@@ -381,3 +381,14 @@ Solo presentazione (nessuna modifica backend/contenuti):
 - Titolo copertina −30% (24/22/20/18 px); griglia info in contenitore vetro con celle a misura (tipo/durata fisse, categoria elastica): mai sovrapposizioni.
 - Copertina dinamica: `readerCoverFrame(winW, pageH, reserveCap)` con `ReaderIntro.onFit` (misura titolo+dati+intro+invito) → l'introduzione è sempre leggibile per intero nella prima schermata (min copertina 200px). Condiviso con story-morph.
 - ESPLORA: accento bianco ghiaccio (#EAF7FF) quando selezionata.
+
+## Card Home: titolo sopra, badge sotto + centraggio più morbido — giugno 2026 (sessione corrente)
+- Richiesta utente: spostare la pillola dei 3 badge in fondo alla card (dove stava il titolo) invertendo
+  l'ordine, così che la transizione card → lettura sia più fluida (elementi già quasi al loro posto);
+  auto-centraggio del mazzo meno "veloce e secco".
+- `home-story-card.tsx`: corpo in fondo alla card ora è una colonna — riga titolo (+ tasto cuffie) sopra,
+  `StoryMetaChips` sotto (gap 10). Rimosso lo scrim superiore (non c'è più nulla in alto).
+- `story-morph.tsx`: geometria di partenza aggiornata (`chipsFrom` sull'ultimo rigo della card,
+  `titleFrom` = sopra i badge − `CHIP_GAP`, tasto cuffie allineato alla riga titolo); rimosso `topScrim`.
+  Verificato su web: primo fotogramma del livello coincide con la card, arrivo identico al lettore.
+- `home-story-deck.tsx`: `SNAP_SPRING` 190/22 → 100/24 (smorzamento ≈ critico, nessun rimbalzo, posa dolce).

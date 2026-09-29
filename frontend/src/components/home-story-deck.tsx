@@ -16,9 +16,9 @@ type Props = {
 /** Cornice della card toccata, in coordinate finestra (per la transizione verso la lettura). */
 export type CardRect = { x: number; y: number; width: number; height: number };
 
-// Molla del centraggio: rapida, con un atterraggio appena molleggiato
-// (rapporto di smorzamento ≈ 0,8 → rimbalzo di pochi pixel, poi ferma).
-const SNAP_SPRING = { damping: 22, stiffness: 190, mass: 1, restDisplacementThreshold: 0.3, restSpeedThreshold: 0.3 };
+// Molla del centraggio: morbida, senza rimbalzo (smorzamento ≈ critico):
+// la card rallenta dolcemente e si posa al centro invece di scattarvi sopra.
+const SNAP_SPRING = { damping: 24, stiffness: 100, mass: 1, restDisplacementThreshold: 0.3, restSpeedThreshold: 0.3 };
 
 // Linea temporale, non anello: a sinistra ci sono solo le card già fatte
 // scorrere, a destra quelle ancora da vedere. Alla prima apertura nulla a sinistra.
