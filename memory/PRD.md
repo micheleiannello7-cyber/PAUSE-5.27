@@ -392,3 +392,20 @@ Solo presentazione (nessuna modifica backend/contenuti):
   `titleFrom` = sopra i badge − `CHIP_GAP`, tasto cuffie allineato alla riga titolo); rimosso `topScrim`.
   Verificato su web: primo fotogramma del livello coincide con la card, arrivo identico al lettore.
 - `home-story-deck.tsx`: `SNAP_SPRING` 190/22 → 100/24 (smorzamento ≈ critico, nessun rimbalzo, posa dolce).
+
+## Lettura: anticipazione → intestazione capitolo senza doppioni — giugno 2026 (sessione corrente)
+- Richiesta utente: il "CAPITOLO 0X + titolo" in fondo alla schermata non deve essere un doppione
+  piccolo: deve ingrandirsi con una transizione morbida e diventare l'intestazione del capitolo seguente.
+- `reader-section.tsx`: `ChapterHeading` (numero in filigrana, occhiello, titolo) è l'unico elemento; per i
+  capitoli dall'indice 1 in su parte come anticipazione (scala 22/31, opacità 0.5, filo sopra, numero accanto
+  all'occhiello) dentro lo spazio riservato in fondo alla sezione precedente (`TeaserSpace`, misura invisibile
+  del titolo seguente, `LAND_PAD` 24 al posto del padding inferiore) e segue lo scroll: `p = interpolate(scrollY,
+  [top − pageH + sm, top − headerBottom − sm])`, quote da `ChapterTrack` (scrollY, tops, pageH, headerBottom
+  passate da `deep-dive/[id].tsx`). Titolo con `transformOrigin: "left top"`. Versione compatta: il titolo
+  resta 31 pt (prima 28) così la misura dell'anticipazione coincide sempre.
+- Verificato su web: stato anticipazione, fotogramma intermedio (ingrandimento + filigrana che compare), arrivo.
+
+## 2026-09-30 — Produzione v9 completata
+- Credito ricaricato: `produce_v9.py` run 3 → 51/52 ok + 1 rifatto con `--only` (copertina non restituita al primo
+  tentativo). Catalogo: 493 storie, 0 senza copertina, 74 v9; tutte le categorie ≥ 40 (scienza 53).
+- Resta in attesa (solo su richiesta): icona 3D "ESPLORA" (`generate_explore_icon.py generate` → revisione → `publish`).

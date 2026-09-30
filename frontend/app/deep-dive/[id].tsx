@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useMemo, useState } from "react";
 import {
   View, StyleSheet, ActivityIndicator, Share, useWindowDimensions, LayoutChangeEvent, Platform, BackHandler,
 } from "react-native";
@@ -26,7 +26,7 @@ import { ReaderFrame } from "@/src/components/reader-frame";
 import { ReaderIntro, readerCoverFrame } from "@/src/components/reader-intro";
 import { StoryAudioProvider, AudioSheet, AudioMiniBadge, IntroListenButton } from "@/src/components/story-audio-player";
 import { ReaderHeader, READER_HEADER_H } from "@/src/components/reader-header";
-import { ChapterSection } from "@/src/components/reader-section";
+import { ChapterSection, ChapterTrack } from "@/src/components/reader-section";
 import { ReaderEnding } from "@/src/components/reader-ending";
 import { Screen } from "@/src/components/screen";
 import { StoryShareCard, SHARE_CARD_WIDTH } from "@/src/components/story-share-card";
@@ -218,6 +218,9 @@ export default function DeepDive() {
   const scrollToSection = useCallback((i: number, animated = true) => {
     if (!jumpTo(i, animated)) pendingSection.current = { index: i, animated };
   }, [jumpTo]);
+  // Quote per l'intestazione dei capitoli, che nasce come anticipazione in fondo
+  // alla schermata precedente e si posa al suo posto seguendo lo scroll.
+  const chapterTrack = useMemo<ChapterTrack>(() => ({ scrollY, tops: topsSV, pageH: pageHSV, headerBottom }), [scrollY, topsSV, pageHSV, headerBottom]);
 
   // Lettura a capitoli: lo scorrimento libero è disattivato. Ogni gesto
   // verticale porta esattamente alla sezione successiva o precedente
@@ -519,7 +522,8 @@ export default function DeepDive() {
 
           {chaptersReady ? story.chapters.map((c, i) => (
             <View key={c.number} onLayout={(e) => onSectionLayout(i, e)} testID={`deep-dive-page-chapter-${c.number}`}>
-              <ChapterSection chapter={c} story={story} eyebrow={t.chapter} next={story.chapters[i + 1] ?? null} minHeight={pageH - headerBottom} pageOverlap={pageOverlap} />
+              <ChapterSection chapter={c} story={story} eyebrow={t.chapter} next={story.chapters[i + 1] ?? null} minHeight={pageH - headerBottom} pageOverlap={pageOverlap}
+                index={i} track={chapterTrack} />
             </View>
           )) : null}
 
